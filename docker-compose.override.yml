@@ -5,21 +5,45 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=catalogdb
-      - PGDATA=/var/lib/postgresql/data/pgdata  # Bu satırı ekliyoruz
+      - PGDATA=/var/lib/postgresql/data/pgdata 
     restart: always
     ports:
       - "5432:5432"
     volumes:
       - postgres_catalog:/var/lib/postgresql/data/
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d catalogdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  basketdb:
+    container_name: basketdb
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=basketdb
+      - PGDATA=/var/lib/postgresql/data/pgdata 
+    restart: always
+    ports:
+      - "5433:5432" # DÜZELTİLDİ: Konteyner içi her zaman 5432'dir
+    volumes:
+      - postgres_basket:/var/lib/postgresql/data/
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d basketdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   catalog.api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
       - ASPNETCORE_HTTPS_PORTS=8081
-      # İsim ve Server değeri güncellendi
       - ConnectionStrings__DatabaseConnection=Server=catalogdb;Port=5432;Database=catalogdb;User Id=postgres;Password=postgres;Include Error Detail=true
     depends_on:
-      - catalogdb
+      # YENİ EKLENEN KISIM: API'yi başlatmak için veritabanının "sağlıklı" olmasını bekle
+      catalogdb:
+        condition: service_healthy
     ports:
       - "6000:8080"
       - "6060:8081"
@@ -28,4 +52,20 @@ services:
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
-  
+
+  basket.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8081
+      - ASPNETCORE_HTTPS_PORTS=8082
+      - ConnectionStrings__DatabaseConnection=Server=basketdb;Port=5432;Database=basketdb;User Id=postgres;Password=postgres;Include Error Detail=true
+    depends_on:
+      - basketdb
+    ports:
+      - "6001:8081"
+      - "6061:8082"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
