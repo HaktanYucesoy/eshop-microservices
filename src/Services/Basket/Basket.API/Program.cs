@@ -1,12 +1,41 @@
-var builder = WebApplication.CreateBuilder(args);
+using Basket.API.Data;
+using Basket.API.Models;
+using BuildingBlocks.Dependencies;
+using BuildingBlocks.Exceptions.Handler;
+using BuildingBlocks.IoC;
+using BuildingBlocks.Modules;
+using Carter;
+using HealthChecks.UI.Client;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
-// Add services to the container.
+var builder = WebApplication.CreateBuilder(args);
+var assembly = typeof(Program).Assembly;
+var dbConnection = builder.Configuration.GetConnectionString("DatabaseConnection")!;
+
+builder.Services.AddDependencyResolvers([
+    new MediatorModule(assembly),
+    new MartenModule(config =>
+    {
+        config.Connection(dbConnection);
+        config.Schema.For<ShoppingCart>().Identity(s => s.UserName);
+    }),
+    new CarterDependencyModule(assembly),
+    new BasketDataModule()
+]);
+
+
+builder.Services.AddExceptionHandler<CustomExceptionHandler>();
+
+builder.Services.AddHealthChecks()
+    .AddNpgSql(dbConnection);
+
 
 var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-
 app.UseHttpsRedirection();
-
-
+app.MapCarter();
+app.UseHealthChecks("/health", new HealthCheckOptions
+{
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+});
+app.UseExceptionHandler((options) => { });
 app.Run();
