@@ -7,6 +7,7 @@ namespace Basket.API.Data
         public void Load(IServiceCollection services)
         {
             services.AddScoped<IBasketRepository, BasketRepository>();
+            services.Decorate<IBasketRepository, CachedBasketRepository>();
         }
     }
 }

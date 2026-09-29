@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 var builder = WebApplication.CreateBuilder(args);
 var assembly = typeof(Program).Assembly;
 var dbConnection = builder.Configuration.GetConnectionString("DatabaseConnection")!;
+var redisConnection = builder.Configuration.GetConnectionString("Redis")!;
 
 builder.Services.AddDependencyResolvers([
     new MediatorModule(assembly),
@@ -24,10 +25,16 @@ builder.Services.AddDependencyResolvers([
 ]);
 
 
+builder.Services.AddStackExchangeRedisCache(config =>
+{
+    config.Configuration = redisConnection;
+});
+
 builder.Services.AddExceptionHandler<CustomExceptionHandler>();
 
 builder.Services.AddHealthChecks()
-    .AddNpgSql(dbConnection);
+    .AddNpgSql(dbConnection)
+    .AddRedis(redisConnection);
 
 
 var app = builder.Build();

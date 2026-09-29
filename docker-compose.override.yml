@@ -34,6 +34,12 @@ services:
       timeout: 5s
       retries: 5
 
+  distributedCache:
+     container_name: distributedCache
+     restart: always
+     ports:
+       - "6379:6379"
+
   catalog.api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
@@ -59,8 +65,10 @@ services:
       - ASPNETCORE_HTTP_PORTS=8081
       - ASPNETCORE_HTTPS_PORTS=8082
       - ConnectionStrings__DatabaseConnection=Server=basketdb;Port=5432;Database=basketdb;User Id=postgres;Password=postgres;Include Error Detail=true
+      - ConnectionStrings__Redis=distributedCache:6379
     depends_on:
       - basketdb
+      - distributedCache
     ports:
       - "6001:8081"
       - "6061:8082"
