@@ -7,6 +7,7 @@
     <Project Path="src/Services/Basket/Basket.API/Basket.API.csproj" Id="489ed902-3458-4ed6-94a2-100e4f8ab24c" />
     <Project Path="src/Services/Catalog/Catalog.API/Catalog.API.csproj" />
     <Project Path="src/Services/Discount/Discount.Grpc/Discount.Grpc.csproj" Id="75ce7c63-c070-42af-9068-e2f5ed2e0c04" />
+    <Project Path="src/Services/Ordering/Ordering.API/Ordering.API.csproj" Id="3d8ff5cc-4d23-471c-94ca-b3ab7f92fdb3" />
   </Folder>
   <Project Path="docker-compose.dcproj">
     <Build />
