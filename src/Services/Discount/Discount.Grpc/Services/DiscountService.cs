@@ -60,6 +60,7 @@ namespace Discount.Grpc.Services
 
         public override async Task<CouponModel> GetDiscount(GetDiscountRequest request, ServerCallContext context)
         {
+            var allCoupon = await dbContext.Coupons.ToListAsync();
             var coupon = await dbContext.Coupons.FirstOrDefaultAsync(x => x.ProductName == request.ProductName);
 
             if (coupon == null)

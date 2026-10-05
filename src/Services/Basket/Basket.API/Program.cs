@@ -5,6 +5,7 @@ using BuildingBlocks.Exceptions.Handler;
 using BuildingBlocks.IoC;
 using BuildingBlocks.Modules;
 using Carter;
+using Discount.Grpc.Protos;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
@@ -29,6 +30,21 @@ builder.Services.AddStackExchangeRedisCache(config =>
 {
     config.Configuration = redisConnection;
 });
+
+builder.Services.AddGrpcClient<DiscountProtoService.DiscountProtoServiceClient>(option =>
+{
+    option.Address = new Uri(builder.Configuration["GrpcSettings:DiscountUrl"]!);
+
+}).ConfigurePrimaryHttpMessageHandler(() =>
+{
+    var handler = new HttpClientHandler()
+    {
+        ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+    };
+
+    return handler;
+});
+//note: if envoirment is production we should not allow accept any server certificate validator
 
 builder.Services.AddExceptionHandler<CustomExceptionHandler>();
 
